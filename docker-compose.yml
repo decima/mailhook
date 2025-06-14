@@ -1,0 +1,10 @@
+services:
+  mailhook:
+    image: decima/mailhook:0.1.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "25:25"
+    volumes:
+      - ./config.json:/app/config.json

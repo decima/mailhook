@@ -1,0 +1,23 @@
+[
+  {
+    "from": [
+      "decima@zeus"
+    ],
+    "to": [
+      "do@localhost"
+    ],
+    "action": {
+      "url": "http://localhost:18000/00000000-0000-0000-0000-000000000000",
+      "method": "POST",
+      "format": "json",
+      "body": {
+        "subject": "{{subject}}",
+        "from": "{{from}}",
+        "to": "{{to}}",
+        "text": "{{text}}",
+        "some": "other",
+        "json": "data"
+      }
+    }
+  }
+]

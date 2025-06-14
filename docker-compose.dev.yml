@@ -1,0 +1,14 @@
+services:
+  webhook:
+    image: ghcr.io/tarampampam/webhook-tester:2
+    command: start server
+    environment:
+      AUTO_CREATE_SESSIONS: true
+    ports:
+      - "18000:8080"
+  curl:
+    restart: no
+    image: curlimages/curl:latest
+    command: [ "http://webhook:8080/00000000-0000-0000-0000-000000000000" ]
+    links:
+      - webhook
