@@ -11,10 +11,6 @@
       "method": "POST",
       "format": "json",
       "body": {
-        "subject": "{{subject}}",
-        "from": "{{from}}",
-        "to": "{{to}}",
-        "text": "{{text}}",
         "some": "other",
         "json": "data"
       }
