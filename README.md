@@ -23,10 +23,6 @@ you can add multiple actions for the same from/to combination.
       "method": "POST",
       "format": "json",
       "body": {
-        "subject": "{{subject}}",
-        "from": "{{from}}",
-        "to": "{{to}}",
-        "text": "{{text}}",
         "some": "other",
         "json": "data"
       }
@@ -42,7 +38,7 @@ With docker-compose:
 ```yaml
 services:
   mailhook:
-    image: decima/mailhook:0.1.0
+    image: decima/mailhook:0.1.1
     ports:
       - "25:2525"
     volumes:

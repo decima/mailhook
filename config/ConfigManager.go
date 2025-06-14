@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 )
 
 type Email struct {
@@ -18,19 +17,6 @@ type Email struct {
 	Text    string `json:"text"`
 }
 
-func (e *Email) ApplyPlaceholders(str string) string {
-	placeHolders := map[string]string{
-		"from":    e.From,
-		"to":      e.To,
-		"subject": e.Subject,
-		"text":    e.Text,
-	}
-	for key, value := range placeHolders {
-		str = strings.Replace(str, "{{"+key+"}}", value, -1)
-	}
-	return str
-}
-
 type Handler struct {
 	From   []string `json:"from"`
 	To     []string `json:"to"`
@@ -38,10 +24,10 @@ type Handler struct {
 }
 
 type Action struct {
-	URL    string `json:"url"`
-	Method string `json:"method"`
-	Format string `json:"format"`
-	Body   any    `json:"body,omitempty"`
+	URL    string         `json:"url"`
+	Method string         `json:"method"`
+	Format string         `json:"format"`
+	Body   map[string]any `json:"body,omitempty"`
 }
 
 func (a *Action) Run(e Email) error {
@@ -52,9 +38,16 @@ func (a *Action) Run(e Email) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 
-	if a.Body != nil {
-		var content string = ""
-
+	var content string = ""
+	if a.Format != "empty" {
+		for k, v := range map[string]string{
+			"from":    e.From,
+			"to":      e.To,
+			"subject": e.Subject,
+			"text":    e.Text,
+		} {
+			a.Body["_"+k] = v
+		}
 		switch a.Format {
 		case "json":
 			jsonBody, err := json.Marshal(a.Body)
@@ -65,19 +58,20 @@ func (a *Action) Run(e Email) error {
 			req.Header.Set("Content-Type", "application/json")
 		default:
 			return fmt.Errorf("unsupported format: %s", a.Format)
-
 		}
 
-		tmp := e.ApplyPlaceholders(content)
-
-		req.Body = io.NopCloser(bytes.NewBufferString(tmp))
-
+		req.Body = io.NopCloser(bytes.NewBufferString(content))
 	}
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error sending request: %w", err)
 	}
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("error reading response body: %w", err)
+	}
+	fmt.Println("Response status:", resp.Status, "for action:", a.Method, a.URL, respBody)
 	defer resp.Body.Close()
 
 	return nil
@@ -163,6 +157,7 @@ func RunActions(from string, to string, subject string, text string) error {
 	fromToPair := uniquePair(from, to)
 	actions, exists := Config[fromToPair]
 	if !exists {
+		log.Printf("No actions for %s from %s to %s", subject, from, to)
 		return nil
 	}
 	for _, action := range actions {
